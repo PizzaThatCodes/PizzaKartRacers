@@ -1,19 +1,17 @@
 package me.pizzathatcodes.pizzakartracers.game_logic.classes;
 
 import me.pizzathatcodes.pizzakartracers.Main;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.MultipleFacing;
 import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
+
+import java.util.Random;
 
 public class Kart {
 
@@ -33,6 +31,8 @@ public class Kart {
 
     public BukkitTask rotationTask;
     public float yaw;
+
+    public BukkitTask kartDriveParticle;
 
     public Kart(double speed, int accelerationvar, double handling) {
         this.speed = speed;
@@ -61,6 +61,37 @@ public class Kart {
                     boostPadDelay--;
             }
         }.runTaskTimer(Main.getInstance(), 0, 20);
+
+        kartDriveParticle = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (kartEntity == null) {
+                    return;
+                }
+
+                Location loc = kartEntity.getLocation();
+                World world = loc.getWorld();
+
+                // Clone location and adjust it to be behind the entity
+                Location behind = loc.clone();
+
+                // Get the yaw in radians
+                double yaw = Math.toRadians(loc.getYaw());
+
+                // Calculate the offset behind the player using trigonometry
+                double xOffset = -Math.sin(yaw) * -1.7;
+                double zOffset = Math.cos(yaw) * -1.7;
+
+                // Apply the offset
+                behind.add(xOffset, 0, zOffset);
+
+                // Spawn the particles
+                for (int i = 0; i < 5; i++) {
+                    world.spawnParticle(Particle.EXPLOSION_NORMAL, behind.clone().add(0, 2, 0), 0, 0, 0, 0);
+                }
+            }
+        }.runTaskTimer(Main.getInstance(), 0, 5);
+
 
         // TODO: This code is for bounce mechanics, but it causes the karts to not detect slabs in front of them, so it's disabled for now while I work on more important things
 //        bounceTask = new BukkitRunnable() {
@@ -253,6 +284,8 @@ public class Kart {
                             additionalAcceleration += 3;
                             Main.getInstance().getLogger().info("Acceleration: " + acceleration);
 
+                            spawnBoostParticles();
+
                             if (additionalAcceleration >= 50) {
                                 Main.getInstance().getLogger().info("Finished boosting acceleration! At: " + acceleration);
                                 finished = true;
@@ -262,6 +295,8 @@ public class Kart {
                                     @Override
                                     public void run() {
                                         Main.getInstance().getLogger().info("Decelerating... from: " + acceleration);
+
+                                        spawnBoostParticles();
 
                                         if (acceleration >= 65) {
                                             acceleration -= 2;
@@ -300,6 +335,9 @@ public class Kart {
                             additionalAcceleration += 10;
                             Main.getInstance().getLogger().info("Acceleration: " + acceleration);
 
+                            if(acceleration >= 80)
+                                spawnBoostParticles();
+
                             if ((lastAcceleration + additionalAcceleration) >= 154) {
                                 Main.getInstance().getLogger().info("Finished boosting acceleration! At: " + acceleration);
                                 finished = true;
@@ -309,6 +347,9 @@ public class Kart {
                                     @Override
                                     public void run() {
                                         Main.getInstance().getLogger().info("Decelerating... from: " + acceleration);
+
+                                        if(acceleration >= 80)
+                                            spawnBoostParticles();
 
                                         if (acceleration >= 65) {
                                             acceleration -= 3;
@@ -331,6 +372,46 @@ public class Kart {
                 break;
         }
 
+    }
+
+    /**
+     * Spawn particles to indicate a speed boost
+     */
+    public void spawnBoostParticles() {
+        Location loc = kartEntity.getLocation();
+        World world = loc.getWorld();
+
+        // Clone location and adjust it to be behind the entity
+        Location behind = loc.clone();
+
+        // Get the yaw in radians
+        double yaw = Math.toRadians(loc.getYaw());
+
+        // Calculate the offset behind the player using trigonometry
+        double xOffset = -Math.sin(yaw) * -1.7;
+        double zOffset = Math.cos(yaw) * -1.7;
+
+        // Apply the offset
+        behind.add(xOffset, 0, zOffset);
+
+        // Spawn the particles
+        Random random = new Random();
+
+        for (int i = 0; i < 30; i++) {
+            // Generate random RGB values between 0 and 255
+            int r = random.nextInt(256);
+            int g = random.nextInt(256);
+            int b = random.nextInt(256);
+
+            int xoffset = random.nextInt(3) - 1;
+            int zoffset = random.nextInt(3) - 1;
+
+            // Create DustOptions with random color and size
+            Particle.DustOptions dustOptions = new Particle.DustOptions(Color.fromRGB(r, g, b), 1);
+
+            // Spawn the particle at the given location
+            world.spawnParticle(Particle.REDSTONE, behind.clone().add(xoffset, 2, zoffset), 50, 3, 3, 3, dustOptions);
+        }
     }
 
     /**
@@ -360,6 +441,14 @@ public class Kart {
         if(bounceTask != null) {
             bounceTask.cancel();
             bounceTask = null;
+        }
+        if(tiltTask != null) {
+            tiltTask.cancel();
+            tiltTask = null;
+        }
+        if(kartDriveParticle != null) {
+            kartDriveParticle.cancel();
+            kartDriveParticle = null;
         }
     }
 
