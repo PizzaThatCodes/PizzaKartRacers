@@ -1,5 +1,8 @@
 package me.pizzathatcodes.pizzakartracers;
 
+import cloud.timo.TimoCloud.api.TimoCloudAPI;
+import cloud.timo.TimoCloud.api.objects.ServerGroupObject;
+import cloud.timo.TimoCloud.api.objects.ServerObject;
 import com.comphenix.protocol.PacketType;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.ListenerPriority;
@@ -7,25 +10,47 @@ import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
 import me.pizzathatcodes.pizzakartracers.commands.getKartCommand;
 import me.pizzathatcodes.pizzakartracers.events.DriftHandler;
-import me.pizzathatcodes.pizzakartracers.events.PlayerKartMove;
 import me.pizzathatcodes.pizzakartracers.events.PlayerLeaveEvent;
 import me.pizzathatcodes.pizzakartracers.game_logic.Game;
 import me.pizzathatcodes.pizzakartracers.game_logic.classes.GamePlayer;
 import me.pizzathatcodes.pizzakartracers.game_logic.classes.Kart;
+import me.pizzathatcodes.pizzakartracers.queue_logic.Queue;
+import me.pizzathatcodes.pizzakartracers.queue_logic.classes.QueuePlayer;
+import me.pizzathatcodes.pizzakartracers.startup_logic.mapSystem;
 import me.pizzathatcodes.pizzakartracers.utils.configManager;
 import me.pizzathatcodes.pizzakartracers.utils.util;
+import net.slimeworksapi.SlimeWorksAPI;
+import net.slimeworksapi.database.model.Games_Running;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public final class Main extends JavaPlugin {
 
     private static Main instance;
     private static Game game;
+
+    private static boolean disabling = false;
+
+    private static ArrayList<QueuePlayer> queuePlayerBoards = new ArrayList<>();
+
+    private static SlimeWorksAPI slimeworksAPI;
+
+    /**
+     * @return The Slimeworks API instance
+     */
+    public static SlimeWorksAPI getSlimeworksAPI() {
+        return slimeworksAPI;
+    }
+
+    public static ArrayList<QueuePlayer> getQueuePlayerBoards() {
+        return queuePlayerBoards;
+    }
 
     public static Main getInstance() {
         return instance;
@@ -35,9 +60,25 @@ public final class Main extends JavaPlugin {
         return game;
     }
 
+    public static Queue queue;
+
+    public static Queue getQueue() {
+        return queue;
+    }
+
+    public static mapSystem map;
+
     @Override
     public void onEnable() {
         instance = this;
+
+        util.setConfigFile(new configManager("config.yml"));
+        if(!util.getConfigFile().getConfigFile().exists())
+            Main.getInstance().saveResource("config.yml", false);
+
+        util.getConfigFile().updateConfig(Arrays.asList());
+        util.getConfigFile().saveConfig();
+        util.getConfigFile().reloadConfig();
 
         util.setMessageFile(new configManager("messages.yml"));
         if(!util.getMessageFile().getConfigFile().exists())
@@ -47,11 +88,23 @@ public final class Main extends JavaPlugin {
         util.getMessageFile().saveConfig();
         util.getMessageFile().reloadConfig();
 
+        util.setMapFile(new configManager("maps.yml"));
+        if(!util.getMapFile().getConfigFile().exists())
+            Main.getInstance().saveResource("maps.yml", false);
+
+        util.getMapFile().updateConfig(Arrays.asList());
+        util.getMapFile().saveConfig();
+        util.getMapFile().reloadConfig();
+
+        slimeworksAPI = new SlimeWorksAPI(this);
+
         getCommand("getkart").setExecutor(new getKartCommand());
 
-        getServer().getPluginManager().registerEvents(new PlayerKartMove(), this);
         getServer().getPluginManager().registerEvents(new PlayerLeaveEvent(), this);
         getServer().getPluginManager().registerEvents(new DriftHandler(), this);
+
+        queue = new Queue();
+        getQueue().registerQueueEvents();
 
         ProtocolLibrary.getProtocolManager().addPacketListener(new PacketAdapter(this, ListenerPriority.NORMAL, PacketType.Play.Client.STEER_VEHICLE) {
             int delay = 0;
@@ -170,11 +223,36 @@ public final class Main extends JavaPlugin {
             gamePlayer.createKart();
         }
 
+        if(map == null || !map.isMapLoading()) {
+            map = new mapSystem();
+            map.loadMap();
+        }
+
+
         getLogger().info("FormulaKartRacers has been enabled!");
+
+
+        ServerObject server = TimoCloudAPI.getBukkitAPI().getThisServer();
+
+        Games_Running games_running = new Games_Running(
+                server.getName(),
+                "pizzakartracers",
+                new ArrayList<>(),
+                "waiting"
+        );
+
+        getSlimeworksAPI().getGameRunningDatabase().createInformation(games_running);
+        getLogger().info("Created game data for server " + server.getName());
+
+    }
+
+    public static boolean isDisabling() {
+        return disabling;
     }
 
     @Override
     public void onDisable() {
+        disabling = true;
         while (Main.getGame().getPlayers().size() > 0) {
             GamePlayer gamePlayer = Main.getGame().getPlayers().get(0);
             Bukkit.getPlayer(gamePlayer.getUuid()).eject();
@@ -184,6 +262,26 @@ public final class Main extends JavaPlugin {
             Main.getGame().removePlayer(gamePlayer);
             getLogger().info("Removed player " + gamePlayer.getUuid());
         }
+
+        for(Player player : Bukkit.getOnlinePlayers()) {
+            for(ServerObject goober_lobby : TimoCloudAPI.getUniversalAPI().getServerGroup("Lobby").getServers()) {
+                if(goober_lobby.getOnlinePlayerCount() < goober_lobby.getMaxPlayerCount()) {
+                    TimoCloudAPI.getUniversalAPI().getPlayer(player.getUniqueId()).sendToServer(goober_lobby);
+                    break;
+                }
+            }
+        }
+
+        ServerObject server = TimoCloudAPI.getBukkitAPI().getThisServer();
+        Games_Running games_running = getSlimeworksAPI().getGameRunningDatabase().findGameDataByID(server.getName());
+        if(games_running != null) {
+            getSlimeworksAPI().getGameRunningDatabase().deleteInformation(games_running);
+        }
+        ServerGroupObject pizzakartracers = TimoCloudAPI.getUniversalAPI().getServerGroup("pizzakartracers");
+        if(pizzakartracers.getOnlineAmount() > 0)
+            pizzakartracers.setOnlineAmount(pizzakartracers.getOnlineAmount() - 1);
+
+
         getLogger().info("FormulaKartRacers has been disabled!");
         game = null;
 

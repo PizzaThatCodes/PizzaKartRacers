@@ -3,7 +3,12 @@ package me.pizzathatcodes.pizzakartracers.utils;
 import me.pizzathatcodes.pizzakartracers.Main;
 import me.pizzathatcodes.pizzakartracers.game_logic.classes.GamePlayer;
 import net.md_5.bungee.api.ChatColor;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Minecart;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.EulerAngle;
@@ -15,6 +20,8 @@ import java.util.regex.Pattern;
 public class util {
 
     private static configManager messageFile;
+    private static configManager mapFile;
+    private static configManager configFile;
 
     /**
      * Translate a string with color codes to have colored text (hex supported)
@@ -57,6 +64,59 @@ public class util {
     public static void setMessageFile(configManager messageFile) {
         util.messageFile = messageFile;
     }
+
+    /**
+     * Get the map file
+     * @return mapFile
+     */
+    public static configManager getMapFile() {
+        return mapFile;
+    }
+
+    /**
+     * Set the map file
+     * @param mapFile
+     */
+    public static void setMapFile(configManager mapFile) {
+        util.mapFile = mapFile;
+    }
+
+    /**
+     * Get the config file
+     * @return configFile
+     */
+    public static configManager getConfigFile() {
+        return configFile;
+    }
+
+    /**
+     * Set the config file
+     * @param configFile
+     */
+    public static void setConfigFile(configManager configFile) {
+        util.configFile = configFile;
+    }
+
+    /**
+     * Really janky setup to run a console command without it being logged into console
+     * @param command the command to run
+     * @param world the world to run the command in
+     */
+    public static void runConsoleCommand(String command, World world) {
+        String commandFeedback = world.getGameRuleValue("sendCommandFeedback");
+        String commandBlockOutput = world.getGameRuleValue("commandBlockOutput");
+        world.setGameRuleValue("sendCommandFeedback", "false");
+        world.setGameRuleValue("commandBlockOutput", "false");
+
+        Location location = new Location(world, 0, -320, 0);
+        Minecart minecart = (Minecart) world.spawnEntity(location, EntityType.MINECART);
+        Bukkit.getServer().dispatchCommand(minecart, command);
+
+        world.setGameRuleValue("sendCommandFeedback", commandFeedback);
+        world.setGameRuleValue("commandBlockOutput", commandBlockOutput);
+        minecart.remove();
+    }
+
 
     public static void handleSidewayMovement(Player player, float sideways) {
         GamePlayer gamePlayer = Main.getGame().getGamePlayer(player.getUniqueId());

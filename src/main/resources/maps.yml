@@ -1,0 +1,140 @@
+Maps:
+  Retro:
+    mapFileName: retro
+    enabled: true
+    queue:
+      spawn-locations:
+        1:
+          x: 98.5
+          y: 8
+          z: 114.5
+          pitch: 0
+          yaw: -180
+        2:
+          x: 92.5
+          y: 8
+          z: 114.5
+          pitch: 0
+          yaw: -180
+        3:
+          x: 95.5
+          y: 8
+          z: 114.5
+          pitch: 0
+          yaw: -180
+        4:
+          x: 101.5
+          y: 8
+          z: 114.5
+          pitch: 0
+          yaw: -180
+        5:
+          x: 104.5
+          y: 8
+          z: 114.5
+          pitch: 0
+          yaw: -180
+        6:
+          x: 98.5
+          y: 8
+          z: 117.5
+          pitch: 0
+          yaw: -180
+        7:
+          x: 92.5
+          y: 8
+          z: 117.5
+          pitch: 0
+          yaw: -180
+        8:
+          x: 95.5
+          y: 8
+          z: 117.5
+          pitch: 0
+          yaw: -180
+        9:
+          x: 101.5
+          y: 8
+          z: 117.5
+          pitch: 0
+          yaw: -180
+        10:
+          x: 104.5
+          y: 8
+          z: 117.5
+          pitch: 0
+          yaw: -180
+    game:
+      spawn-locations:
+        1:
+          x: 108.5
+          y: 31
+          z: 151.5
+          pitch: 0
+          yaw: -180
+        2:
+          x: 111.5
+          y: 31
+          z: 151.5
+          pitch: 0
+          yaw: -180
+        3:
+          x: 114.5
+          y: 31
+          z: 151.5
+          pitch: 0
+          yaw: -180
+        4:
+          x: 117.5
+          y: 31
+          z: 151.5
+          pitch: 0
+          yaw: -180
+        5:
+          x: 108.5
+          y: 31
+          z: 154.5
+          pitch: 0
+          yaw: -180
+        6:
+          x: 111.5
+          y: 31
+          z: 154.5
+          pitch: 0
+          yaw: -180
+        7:
+          x: 114.5
+          y: 31
+          z: 154.5
+          pitch: 0
+          yaw: -180
+        8:
+          x: 117.5
+          y: 31
+          z: 154.5
+          pitch: 0
+          yaw: -180
+        9:
+          x: 108.5
+          y: 31
+          z: 157.5
+          pitch: 0
+          yaw: -180
+        10:
+          x: 111.5
+          y: 31
+          z: 157.5
+          pitch: 0
+          yaw: -180
+        11:
+          x: 114.5
+          y: 31
+          z: 157.5
+          pitch: 0
+          yaw: -180
+        12:
+          x: 117.5
+          y: 31
+          z: 157.5
+          pitch: 0
+          yaw: -180

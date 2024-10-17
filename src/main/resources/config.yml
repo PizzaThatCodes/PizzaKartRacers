@@ -1,0 +1,14 @@
+schemas:
+  player_data:
+    type: mysql
+    username:
+    password:
+    host:
+    port:
+    database:
+  game_running:
+    username:
+    password:
+    host:
+    port:
+    database:

@@ -14,9 +14,12 @@ public class GamePlayer {
     Kart kart;
     double driftDelay;
 
+    int lap;
+
     public GamePlayer(UUID uuid, Kart kart) {
         this.uuid = uuid;
         this.kart = kart;
+        this.lap = 1;
     }
 
     /**
@@ -49,6 +52,20 @@ public class GamePlayer {
         this.uuid = uuid;
     }
 
+    /**
+     * @return the lap the player is on
+     */
+    public int getLap() {
+        return lap;
+    }
+
+    /**
+     * Set the lap the player is on
+     * @param lap the lap to set
+     */
+    public void setLap(int lap) {
+        this.lap = lap;
+    }
 
     public void createKart() {
         Player player = Bukkit.getPlayer(getUuid());
