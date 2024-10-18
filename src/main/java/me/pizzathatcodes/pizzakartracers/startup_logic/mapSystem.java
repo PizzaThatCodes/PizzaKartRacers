@@ -1,16 +1,19 @@
 package me.pizzathatcodes.pizzakartracers.startup_logic;
 
 import me.pizzathatcodes.pizzakartracers.Main;
+import me.pizzathatcodes.pizzakartracers.game_logic.classes.GamePlayer;
 import me.pizzathatcodes.pizzakartracers.utils.util;
-import org.bukkit.*;
-import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.WorldCreator;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Random;
 
 import static me.pizzathatcodes.pizzakartracers.utils.worldUtils.*;
 
@@ -24,6 +27,8 @@ public class mapSystem {
 
     public boolean mapLoaded = false;
     public boolean isMapLoading = false;
+
+    public ArrayList<String> validGameSpawnLocations = new ArrayList<>();
 
     public mapSystem() {
 
@@ -186,5 +191,58 @@ public class mapSystem {
             }
         }.runTaskLater(Main.getInstance(), 1L);
     }
+
+    public void teleportPlayerToGame(Player player) {
+        for (String spawnLocation : util.getMapFile().getConfig().getConfigurationSection("Maps." + mapName + ".game.spawn-locations").getKeys(false)) {
+            validGameSpawnLocations.add(spawnLocation);
+        }
+
+        if (validGameSpawnLocations == null || validGameSpawnLocations.isEmpty()) {
+            Main.getInstance().getLogger().warning("No spawn locations found for map: " + mapName);
+            return;
+        }
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    Random random = new Random();
+                    int index = random.nextInt(validGameSpawnLocations.size());
+                    String locationObj = validGameSpawnLocations.get(index);
+
+                    double x = util.getMapFile().getConfig().getInt("Maps." + mapName + ".game.spawn-locations." + locationObj + ".x");
+                    double y = util.getMapFile().getConfig().getInt("Maps." + mapName + ".game.spawn-locations." + locationObj + ".y");
+                    double z = util.getMapFile().getConfig().getInt("Maps." + mapName + ".game.spawn-locations." + locationObj + ".z");
+                    float yaw = util.getMapFile().getConfig().getInt("Maps." + mapName + ".game.spawn-locations." + locationObj + ".yaw");
+                    float pitch = util.getMapFile().getConfig().getInt("Maps." + mapName + ".game.spawn-locations." + locationObj + ".pitch");
+
+                    GamePlayer gamePlayer = Main.getGame().getGamePlayer(player.getUniqueId());
+                    Location location = new Location(Bukkit.getWorld(map), x, y, z, yaw, pitch);
+
+                    // Teleport the kart (ArmorStand)
+                    gamePlayer.getKart().getKartEntity().teleport(location);
+
+                    // Teleport the player
+                    player.teleport(location);
+                    gamePlayer.getKart().getKartEntity().remove();
+
+                    // Delay the assignment of the player to the kart to ensure both are teleported
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            gamePlayer.createKart();
+                        }
+                    }.runTaskLater(Main.getInstance(), 10L); // A slight delay to ensure teleport is complete
+
+                    validGameSpawnLocations.remove(locationObj);
+
+                } catch (Exception e) {
+                    Main.getInstance().getLogger().severe("Error teleporting player to the game: " + e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }.runTaskLater(Main.getInstance(), 1L);
+    }
+
 
 }

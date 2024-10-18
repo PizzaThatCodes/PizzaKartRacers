@@ -214,13 +214,17 @@ public class Kart {
 
 //        player.sendMessage("Velocity: " + velocity);
 
+        Location blockInFrontLoc = loc.clone().add(direction.clone().multiply(1));
+        Block blockInFront = blockInFrontLoc.getBlock();
 
 
         // Get the block directly under the kart (for falling/climbing checks)
         Block blockBelow = loc.clone().add(0, -1, 0).getBlock();
 
         // Handle vertical movement (falling or staying on the ground)
-        if (blockBelow.getType().isAir()) {
+        if(blockInFront.getType().isSolid() && blockInFront.getBoundingBox().getHeight() < 1.0) {
+            velocity.setY(0.3); // Simulate climbing a slab
+        } else if (blockBelow.getType().isAir()) {
             velocity.setY(-0.5); // Simulate falling if there's no block below
         } else {
             velocity.setY(armorStand.getVelocity().getY()); // Keep the current Y velocity (e.g., natural gravity)

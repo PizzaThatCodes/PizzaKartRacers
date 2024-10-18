@@ -2,6 +2,9 @@ package me.pizzathatcodes.pizzakartracers.queue_logic.events;
 
 import cloud.timo.TimoCloud.api.TimoCloudAPI;
 import cloud.timo.TimoCloud.api.objects.ServerObject;
+import com.viaversion.viaversion.api.Via;
+import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
+import fr.mrmicky.fastboard.FastBoard;
 import me.pizzathatcodes.pizzakartracers.Main;
 import me.pizzathatcodes.pizzakartracers.game_logic.classes.GamePlayer;
 import me.pizzathatcodes.pizzakartracers.game_logic.classes.Kart;
@@ -38,27 +41,35 @@ public class PlayerJoinEvent implements Listener {
             games_running.addPlayer(player.getUniqueId());
             Main.getSlimeworksAPI().getGameRunningDatabase().updateInformation(games_running);
             Main.map.teleportPlayerToWaitingRoom(player);
-
-
-            if(Main.getQueue() == null) {
-                Main.queue = new Queue();
-            }
             Main.getQueue().addPlayer(player);
 
 
             new BukkitRunnable() {
                 @Override
                 public void run() {
+                    FastBoard board = new FastBoard(player) {
+                        @Override
+                        public boolean hasLinesMaxLength() {
+                            return Via.getAPI().getPlayerVersion(getPlayer()) < ProtocolVersion.v1_13.getVersion();
+                        }
+                    };
+                    board.updateTitle(util.translate("&e&lPizza Kart Racers"));
+
+
                     GamePlayer gamePlayer = new GamePlayer(
                             player.getUniqueId(),
                             new Kart(0,
                                     0,
-                                    0)
+                                    0),
+                            board
                     );
 
                     Main.getGame().addPlayer(gamePlayer);
 
                     gamePlayer.createKart();
+
+
+
                 }
             }.runTaskLater(Main.getInstance(), 2L);
 

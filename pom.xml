@@ -94,6 +94,11 @@
             <name>Pizza's Repositories</name>
             <url>https://maven.pizzalover.tech/private</url>
         </repository>
+        <repository>
+            <id>viaversion-repo</id>
+            <url>https://repo.viaversion.com</url>
+        </repository>
+
     </repositories>
 
     <dependencies>
@@ -125,6 +130,12 @@
             <groupId>net.slimeworksapi</groupId>
             <artifactId>slimeworksapi</artifactId>
             <version>1.0.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.viaversion</groupId>
+            <artifactId>viaversion-api</artifactId>
+            <version>5.0.1</version>
+            <scope>provided</scope>
         </dependency>
 
     </dependencies>

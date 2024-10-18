@@ -8,14 +8,13 @@ import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.events.ListenerPriority;
 import com.comphenix.protocol.events.PacketAdapter;
 import com.comphenix.protocol.events.PacketEvent;
-import me.pizzathatcodes.pizzakartracers.commands.getKartCommand;
+import me.pizzathatcodes.pizzakartracers.commands.setTimer;
 import me.pizzathatcodes.pizzakartracers.events.DriftHandler;
 import me.pizzathatcodes.pizzakartracers.events.PlayerLeaveEvent;
 import me.pizzathatcodes.pizzakartracers.game_logic.Game;
 import me.pizzathatcodes.pizzakartracers.game_logic.classes.GamePlayer;
-import me.pizzathatcodes.pizzakartracers.game_logic.classes.Kart;
 import me.pizzathatcodes.pizzakartracers.queue_logic.Queue;
-import me.pizzathatcodes.pizzakartracers.queue_logic.classes.QueuePlayer;
+import me.pizzathatcodes.pizzakartracers.queue_logic.classes.queueScoreboard;
 import me.pizzathatcodes.pizzakartracers.startup_logic.mapSystem;
 import me.pizzathatcodes.pizzakartracers.utils.configManager;
 import me.pizzathatcodes.pizzakartracers.utils.util;
@@ -26,6 +25,7 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,19 +37,15 @@ public final class Main extends JavaPlugin {
 
     private static boolean disabling = false;
 
-    private static ArrayList<QueuePlayer> queuePlayerBoards = new ArrayList<>();
-
     private static SlimeWorksAPI slimeworksAPI;
+
+    public static BukkitTask scoreboardTask;
 
     /**
      * @return The Slimeworks API instance
      */
     public static SlimeWorksAPI getSlimeworksAPI() {
         return slimeworksAPI;
-    }
-
-    public static ArrayList<QueuePlayer> getQueuePlayerBoards() {
-        return queuePlayerBoards;
     }
 
     public static Main getInstance() {
@@ -98,7 +94,8 @@ public final class Main extends JavaPlugin {
 
         slimeworksAPI = new SlimeWorksAPI(this);
 
-        getCommand("getkart").setExecutor(new getKartCommand());
+        getCommand("settimer").setExecutor(new setTimer());
+
 
         getServer().getPluginManager().registerEvents(new PlayerLeaveEvent(), this);
         getServer().getPluginManager().registerEvents(new DriftHandler(), this);
@@ -209,25 +206,10 @@ public final class Main extends JavaPlugin {
 
         game = new Game();
 
-        for(Player player : getServer().getOnlinePlayers()) {
-            if(game.getGamePlayer(player.getUniqueId()) != null) continue;
-            GamePlayer gamePlayer = new GamePlayer(
-                    player.getUniqueId(),
-                    new Kart(0,
-                            0,
-                            0)
-            );
-
-            Main.getGame().addPlayer(gamePlayer);
-
-            gamePlayer.createKart();
-        }
-
         if(map == null || !map.isMapLoading()) {
             map = new mapSystem();
             map.loadMap();
         }
-
 
         getLogger().info("FormulaKartRacers has been enabled!");
 
