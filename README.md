@@ -8,8 +8,7 @@ PizzaKartRacers is a opensource copy of the famous hypixel gamemode TurboKartRac
 
 ## Help By Contributing!
 
-Any help would be amazing, there will a Trello board on what else that needs to be done so please feel free to create pull requests!
-
+Any help would be amazing, If you want to know what needs to be added or fixed, here is the [Trello board](https://trello.com/b/ntrrAWuQ/pizzakartracers)!
 ## License
 
 This project is licensed under the CC0 License - see the [LICENSE](LICENSE) file for details.
